@@ -7,11 +7,9 @@ optional="gnupg tmux rsync mosh"
 ingredients="sethostname \
         setrepos \
         backports \
-        termite \
-        ansible \
-        terraform \
+        terminology \
         packer \
-        emacs \
+      =
 "
 
 function add_ingredient {
@@ -63,62 +61,8 @@ EOF
             sudo apt-get -y -t stretch-backports install ${required} ${final}
             ;;
 
-        termite)
-            # from https://github.com/Corwind/termite-install/blob/master/termite-install.sh
-
-            sudo apt-get install -y \
-                git \
-                g++ \
-                libgtk-3-dev \
-                gtk-doc-tools \
-                gnutls-bin \
-                valac \
-                intltool \
-                libpcre2-dev \
-                libglib3.0-cil-dev \
-                libgnutls28-dev \
-                libgirepository1.0-dev \
-                libxml2-utils \
-                gperf
-                
-            git clone --recursive https://github.com/thestinger/termite.git
-            git clone https://github.com/thestinger/vte-ng.git
-            
-            echo export LIBRARY_PATH="/usr/include/gtk-3.0:$LIBRARY_PATH"
-            cd vte-ng && ./autogen.sh && make && sudo make install
-            cd ../termite && make && sudo make install
-            sudo ldconfig
-            sudo mkdir -p /lib/terminfo/x; sudo ln -s \
-            /usr/local/share/terminfo/x/xterm-termite \
-            /lib/terminfo/x/xterm-termite
-            
-            sudo update-alternatives --install /usr/bin/x-terminal-emulator x-terminal-emulator /usr/local/bin/termite 60
-            ;;
-            
-        ansible)
-            #Source: http://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html#latest-releases-via-apt-debian
-            # When you run the next command you'll get an error about the gpg key for the ansible ppa
-            sudo sh -c 'cat > /etc/apt/sources.list.d/ansible.list' << EOF
-            deb http://ppa.launchpad.net/ansible/ansible/ubuntu trusty main
-EOF
-            sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 93C4A3FD7BB9C367
-            sudo apt-get update
-            sudo apt-get -y install ansible
-            ;;
-        terraform)
-            TFVersion="${choice:-0.11.7}"
-            echo "#### Default terraform version is ${TFVersion}"
-            curl -o terraform_${TFVersion}_linux_amd64.zip https://releases.hashicorp.com/terraform/${TFVersion}/terraform_${TFVersion}_linux_amd64.zip
-            unzip terraform_${TFVersion}_linux_amd64.zip
-            rm terraform_${TFVersion}_linux_amd64.zip
-            sudo mkdir -p /usr/local/stow/terraform
-            sudo mv terraform /usr/local/stow/terraform/terraform-${TFVersion}
-            cd /usr/local/stow/terraform
-            sudo ln -s terraform-${TFVersion} terraform
-            cd ..
-            sudo stow -t /usr/local/bin terraform
-            cd
-            ;;
+      
+         
 
         packer)
             PKVersion="${choice:-1.2.3}"
@@ -133,20 +77,6 @@ EOF
             cd ..
             sudo stow -t /usr/local/bin packer
             cd
-            ;;
-        emacs)
-            git clone -b master git://git.sv.gnu.org/emacs.git
-            sudo apt-get -y install build-essential automake texinfo libjpeg-dev libncurses5-dev
-            sudo apt-get -y install libtiff5-dev libgif-dev libpng-dev libxpm-dev libgtk-3-dev libgnutls28-dev 
-            cd emacs/
-            ./autogen.sh 
-            ./configure --with-mailutils --prefix=/usr/local/stow/emacs
-            make
-            sudo make install
-            cd /usr/local/stow
-            sudo stow emacs
-            ;;
-        *)  echo "That's all"
             ;;
     esac
 }
